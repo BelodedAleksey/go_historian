@@ -1,15 +1,15 @@
 package main
 
 import (
-	"fmt"
+	"github.com/go-flutter-desktop/go-flutter"
+	"github.com/gonutz/w32"
+	"github.com/nanitefactory/winmb"
+	"github.com/pkg/errors"
 	"image"
 	_ "image/png"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/go-flutter-desktop/go-flutter"
-	"github.com/pkg/errors"
 )
 
 // vmArguments may be set by hover at compile-time
@@ -23,9 +23,21 @@ func main() {
 	}
 	err := flutter.Run(append(options, mainOptions...)...)
 	if err != nil {
-		fmt.Println(err)
+		winmb.MessageBoxPlain("ИСКЛЮЧЕНИЕ: ", err.Error())
 		os.Exit(1)
+	}	
+}
+
+//hide console windows
+func init() {
+	console := w32.GetConsoleWindow()
+	if console != 0 {
+		_, consoleProcID := w32.GetWindowThreadProcessId(console)
+		if w32.GetCurrentProcessId() == consoleProcID {
+			w32.ShowWindowAsync(console, w32.SW_HIDE)
+		}
 	}
+
 }
 
 func iconProvider() ([]image.Image, error) {
@@ -37,7 +49,7 @@ func iconProvider() ([]image.Image, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to eval symlinks for executable path")
 	}
-	imgFile, err := os.Open(filepath.Join(filepath.Dir(execPath), "assets", "icon.png"))
+	imgFile, err := os.Open(filepath.Join(filepath.Dir(execPath), "assets", "doge.png"))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open assets/icon.png")
 	}

@@ -1,13 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
-	"log"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
+	"github.com/nanitefactory/winmb"
 )
 
 //Парсинг timestamp->время
@@ -58,10 +60,10 @@ func time2Str(t time.Time) string {
 }
 
 //Чтение параметров запроса из txt
-func readParams() (server string, tags []string, times []timePeriod, interval string) {
-	buf, err := ioutil.ReadFile("params.txt")
+func readParams(filename string) (server string, tags []string, times []timePeriod, interval string) {
+	buf, err := ioutil.ReadFile(filename)
 	if err != nil {
-		log.Println("Error read params.txt", err.Error())
+		winmb.MessageBoxPlain(fmt.Sprintf("Ошибка чтения %s\n", filename), err.Error())
 	}
 	stroki := strings.Split(string(buf), "\n")
 	for _, str := range stroki {
@@ -90,10 +92,37 @@ func readParams() (server string, tags []string, times []timePeriod, interval st
 	return
 }
 
+//Сохраняем конфиг запроса в txt
+func saveParams(filename string, server string, tags []string, times []timePeriod, interval string) {
+	f, err := os.Create(filename)
+	if err != nil {
+		winmb.MessageBoxPlain(fmt.Sprintf("Ошибка создания %s", filename), err.Error())
+	}
+	defer f.Close()
+	_, err = fmt.Fprintf(f, "server: %s\r\n", server)
+	if err != nil {
+		winmb.MessageBoxPlain(fmt.Sprintf("Ошибка записи в %s", filename), err.Error())
+	}
+	_, err = fmt.Fprintf(f, "tags: %s\r\n", strings.Join(tags, ";"))
+	if err != nil {
+		winmb.MessageBoxPlain(fmt.Sprintf("Ошибка записи в %s", filename), err.Error())
+	}
+	_, err = fmt.Fprint(f, "times: ")
+	for _, t := range times {
+		_, err = fmt.Fprintf(f, "%s, %s;", t.start, t.end)
+	}
+	_, err = fmt.Fprint(f, "\r\n")
+	_, err = fmt.Fprintf(f, "interval: %s\r\n", interval)
+	if err != nil {
+		winmb.MessageBoxPlain(fmt.Sprintf("Ошибка записи в %s", filename), err.Error())
+	}
+}
+
 //Экспорт в эксель
 func export(data map[string][]sample) {
 	//чтение
 	xlFile := excelize.NewFile()
+
 	defer xlFile.SaveAs("Выборка.xlsx")
 
 	i := 1 //буквенная координата столбца
@@ -108,7 +137,6 @@ func export(data map[string][]sample) {
 			xlFile.SetCellValue("Sheet1", cellTime, sample.timestamp)
 			xlFile.SetCellValue("Sheet1", cellValue, sample.value)
 		}
-
 		i++
 	}
 }

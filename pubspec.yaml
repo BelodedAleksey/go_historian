@@ -1,5 +1,5 @@
-name: test_flut
-description: A new Flutter project.
+name: go_historian
+description: Client GE Historian
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -23,6 +23,10 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.2
+  provider:
+  nima:
+  flare_flutter:
+  file_picker:
 
 dev_dependencies:
   flutter_test:
@@ -41,9 +45,21 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #  - images/a_dot_burr.jpeg
-  #  - images/a_dot_ham.jpeg
+  assets:
+    - assets/animations/
+    - assets/images/folder.png
+    - assets/images/image.png
+    - assets/images/ppt.png
+    - assets/images/word.png
+    - assets/images/excel.png
+    - assets/images/txt.png
+    - assets/images/file.png
+    - assets/images/zip.png
+    - assets/images/mp3.png
+    - assets/images/video.png
+    - assets/images/psd.png
+    - assets/images/unknown.png
+    - assets/images/image.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

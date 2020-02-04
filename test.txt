@@ -1,0 +1,4 @@
+server: srv2-historian
+tags: *TEST*
+times: 02-02-20 66:66:66, 66-66-66 66:66:66
+interval: 66
