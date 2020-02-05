@@ -60,7 +60,7 @@ func (p *HistPlugin) onReadConfig(args interface{}) (reply interface{}, err erro
 		tempMap := []interface{}{}
 		tempMap = append(tempMap, t.start)
 		tempMap = append(tempMap, t.end)
-		tempTags = append(tempTimes, tempMap)
+		tempTimes = append(tempTimes, tempMap)
 	}
 	out["times"] = tempTimes
 	return out, nil
@@ -102,33 +102,21 @@ func (p *HistPlugin) onFetch(args interface{}) (reply interface{}, err error) {
 		}
 	}()
 
-	inArgs := args.([]interface{})
-	server := inArgs[0].(string)
-	interval := inArgs[1].(string)
+	inArgs := args.(map[interface{}]interface{})
+	server := inArgs["server"].(string)
+	interval := inArgs["interval"].(string)
 	tags := []string{}
+	tempTags := inArgs["tags"]
+	for _, t := range tempTags.([]interface{}) {
+		tags = append(tags, t.(string))
+	}
 	times := []timePeriod{}
-	var iNext, j int
-	for i := 2; i < len(inArgs); i++ {
-		aStr := inArgs[i].(string)
-		if aStr == "\nF\n" {
-			iNext = i + 1
-			break
-		}
-		tags = append(tags, aStr)
-	}
-	for i := iNext; i < len(inArgs); i++ {
-		aStr := inArgs[i].(string)
-		if aStr == "\nL\n" {
-			iNext = i + 1
-			break
-		}
-		times = append(times, timePeriod{aStr, ""})
-	}
-
-	for i := iNext; i < len(inArgs); i++ {
-		aStr := inArgs[i].(string)
-		times[j].end = aStr
-		j++
+	tempTimes := inArgs["times"]
+	for _, t := range tempTimes.([]interface{}) {
+		time := t.([]interface{})
+		fTime := time[0].(string)
+		lTime := time[1].(string)
+		times = append(times, timePeriod{fTime, lTime})
 	}
 	fetchData(server, tags, times, interval)
 	return "OK", nil

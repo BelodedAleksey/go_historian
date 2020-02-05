@@ -65,8 +65,10 @@ func readParams(filename string) (server string, tags []string, times []timePeri
 	if err != nil {
 		winmb.MessageBoxPlain(fmt.Sprintf("Ошибка чтения %s\n", filename), err.Error())
 	}
-	stroki := strings.Split(string(buf), "\n")
+	//notepad str ends with \r
+	stroki := strings.Split(string(buf), "\r\n")
 	for _, str := range stroki {
+		str = strings.TrimSuffix(str, ";")
 		if strings.Contains(str, "server:") {
 			server = strings.TrimPrefix(
 				strings.ReplaceAll(str, " ", ""), "server:")
@@ -126,16 +128,28 @@ func export(data map[string][]sample) {
 	defer xlFile.SaveAs("Выборка.xlsx")
 
 	i := 1 //буквенная координата столбца
-	xlFile.SetCellValue("Sheet1", "A1", "Timestamp")
+	var sheet = "Sheet1"
+	xlFile.SetCellValue(sheet, "A1", "Timestamp")
 	for tag, samples := range data {
 		cellTag := string(alph[i]) + strconv.Itoa(1)
-		xlFile.SetCellValue("Sheet1", cellTag, tag)
+		xlFile.SetCellValue(sheet, cellTag, tag)
 
+		var row int
 		for j, sample := range samples {
-			cellTime := string(alph[0]) + strconv.Itoa(j+2)
-			cellValue := string(alph[i]) + strconv.Itoa(j+2)
-			xlFile.SetCellValue("Sheet1", cellTime, sample.timestamp)
-			xlFile.SetCellValue("Sheet1", cellValue, sample.value)
+			//перехода на новый лист при 100000 строк
+			if (j%maxRows == 0) && (j != 0) {
+				sheet = strconv.Itoa(j / maxRows)
+				xlFile.NewSheet(sheet)
+				row = 0
+				xlFile.SetCellValue(sheet, "A1", "Timestamp")
+				xlFile.SetCellValue(sheet, cellTag, tag)
+			}
+			cellTime := string(alph[0]) + strconv.Itoa(row+2)
+			cellValue := string(alph[i]) + strconv.Itoa(row+2)
+			xlFile.SetCellValue(sheet, cellTime, sample.timestamp)
+			xlFile.SetCellValue(sheet, cellValue, sample.value)
+
+			row++
 		}
 		i++
 	}

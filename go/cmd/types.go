@@ -3,9 +3,9 @@ package main
 const (
 	strConn       = `Provider=iHOLEDB.iHistorian.1;Persist Security Info=False;USER ID=;Password=;Data Source=%ihistorian%;Mode=Read`
 	alph          = "ABCDEFGHIJKLMNOPRSTUVWXYZ"
-	maxSamples    = 5000    //ограничение на количество сэмплов на запрос, set rowcount=7199 - это максимум
-	maxQueryCount = 100000  //ограничение при котором запрос нельзя делать
-	maxRows       = 1000000 //ограничение экселя строк на лист
+	maxSamples    = 5000   //ограничение на количество сэмплов на запрос, set rowcount=7199 - это максимум
+	maxQueryCount = 100000 //ограничение при котором запрос нельзя делать
+	maxRows       = 100000 //ограничение экселя строк на лист
 )
 
 //пара время: значение

@@ -38,7 +38,21 @@ class MainModel with ChangeNotifier {
     var result = await chan_hist.invokeMethod('onReadConfig', filename);
     //server returned with \r
     selectedServer = result['server'].trim();
-    ctrlInterval.text = result['interval'];
+    ctrlInterval.text = result['interval'].trim();
+    for (int i = 0; i < result['tags'].length; i++) {
+      if (i == ctrlTags.length) {
+        ctrlTags.add(TextEditingController());
+      }
+      ctrlTags[i].text = result['tags'][i].trim();
+    }
+    for (int i = 0; i < result['times'].length; i++) {
+      if (i == ctrlFirstTimes.length) {
+        ctrlFirstTimes.add(TextEditingController());
+        ctrlLastTimes.add(TextEditingController());
+      }
+      ctrlFirstTimes[i].text = result['times'][i][0];
+      ctrlLastTimes[i].text = result['times'][i][1].trim();
+    }
     notifyListeners();
   }
 
@@ -105,20 +119,19 @@ class MainModel with ChangeNotifier {
 
   //Запросить выборку
   void fetchData() {
-    List<String> args = [];
-    args.add(selectedServer);
-    args.add(ctrlInterval.text);
+    Map<String, dynamic> args = {};
+    args['server'] = selectedServer;
+    args['interval'] = ctrlInterval.text;
+    List<String> tags = [];
     ctrlTags.forEach((_ctrl) {
-      args.add(_ctrl.text);
+      tags.add(_ctrl.text);
     });
-    args.add("\nF\n");
-    ctrlFirstTimes.forEach((_ctrl) {
-      args.add(_ctrl.text);
-    });
-    args.add("\nL\n");
-    ctrlLastTimes.forEach((_ctrl) {
-      args.add(_ctrl.text);
-    });
+    args['tags'] = tags;
+    List<List<String>> times = [];
+    for (var i = 0; i < ctrlFirstTimes.length; i++) {
+      times.add([ctrlFirstTimes[i].text, ctrlLastTimes[i].text]);
+    }
+    args['times'] = times;
     chan_hist.invokeMethod('onFetch', args);
   }
 }

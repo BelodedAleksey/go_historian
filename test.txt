@@ -1,4 +1,4 @@
-server: srv2-historian
-tags: *TEST*
-times: 02-02-20 66:66:66, 66-66-66 66:66:66
-interval: 66
+server: ihistorian
+tags: *CR1_LEVEL.F_CV;sd;sdsd;45454
+times:  01-01-20 05:00:00, 01-01-20 06:00:00;ssss, ssd;4545, 666;4, 4;
+interval: 1s
