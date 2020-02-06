@@ -10,6 +10,7 @@ import (
 
 var _ flutter.Plugin = &HistPlugin{}
 var workPercent chan float64
+var stopChan chan bool
 
 type HistPlugin struct {
 	stop chan bool
@@ -18,17 +19,20 @@ type HistPlugin struct {
 func (p *HistPlugin) InitPlugin(messenger plugin.BinaryMessenger) error {
 	channel := plugin.NewMethodChannel(messenger, "hist", plugin.StandardMethodCodec{})
 	channel.HandleFunc("onFetch", p.onFetch)
+	channel.HandleFunc("onCancelFetch", p.onCancelFetch)
 	channel.HandleFunc("onFetchTags", p.onFetchTags)
 	channel.HandleFunc("onReadConfig", p.onReadConfig)
 	channel.HandleFunc("onSaveConfig", p.onSaveConfig)
 	p.stop = make(chan bool)
 	workPercent = make(chan float64)
+	stopChan = make(chan bool)
 	eventChannel := plugin.NewEventChannel(messenger, "event", plugin.StandardMethodCodec{})
 	eventChannel.Handle(p)
 	return nil
 }
 
 func (p *HistPlugin) OnListen(arguments interface{}, sink *plugin.EventSink) {
+
 	for {
 		select {
 		case <-p.stop:
@@ -38,6 +42,7 @@ func (p *HistPlugin) OnListen(arguments interface{}, sink *plugin.EventSink) {
 		default:
 		}
 	}
+
 }
 
 func (p *HistPlugin) OnCancel(arguments interface{}) {
@@ -88,12 +93,21 @@ func (p *HistPlugin) onSaveConfig(args interface{}) (reply interface{}, err erro
 	return "OK", nil
 }
 
+//Запрос тэгов
 func (p *HistPlugin) onFetchTags(args interface{}) (reply interface{}, err error) {
 	server := args.(string)
 	tags := queryTags(server)
 	return tags, nil
 }
 
+//Отменить запрос
+func (p *HistPlugin) onCancelFetch(args interface{}) (reply interface{}, err error) {
+	stopChan <- true
+	stopChan <- false
+	return "OK", nil
+}
+
+//Запрос выборки
 func (p *HistPlugin) onFetch(args interface{}) (reply interface{}, err error) {
 	//catch panic
 	defer func() {
@@ -118,6 +132,6 @@ func (p *HistPlugin) onFetch(args interface{}) (reply interface{}, err error) {
 		lTime := time[1].(string)
 		times = append(times, timePeriod{fTime, lTime})
 	}
-	fetchData(server, tags, times, interval)
+	go fetchData(server, tags, times, interval)
 	return "OK", nil
 }

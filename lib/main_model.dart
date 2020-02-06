@@ -33,8 +33,7 @@ class MainModel with ChangeNotifier {
   }
 
   //Загрузить конфиг
-  void readConfig() async {
-    String filename = 'test.txt';
+  void readConfig(String filename) async {
     var result = await chan_hist.invokeMethod('onReadConfig', filename);
     //server returned with \r
     selectedServer = result['server'].trim();
@@ -57,9 +56,8 @@ class MainModel with ChangeNotifier {
   }
 
   //Сохранить конфиг
-  void saveConfig() {
+  void saveConfig(String filename) {
     Map<String, dynamic> args = {};
-    String filename = 'test.txt';
     args['filename'] = filename;
     args['server'] = selectedServer;
     args['interval'] = ctrlInterval.text;
@@ -115,6 +113,11 @@ class MainModel with ChangeNotifier {
         break;
     }
     notifyListeners();
+  }
+
+  //Прервать запрос
+  void cancelFetch() {
+    chan_hist.invokeMethod("onCancelFetch");
   }
 
   //Запросить выборку

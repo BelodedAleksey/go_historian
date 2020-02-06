@@ -1,15 +1,16 @@
 package main
 
 import (
-	"github.com/go-flutter-desktop/go-flutter"
-	"github.com/gonutz/w32"
-	"github.com/nanitefactory/winmb"
-	"github.com/pkg/errors"
 	"image"
 	_ "image/png"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/go-flutter-desktop/go-flutter"
+	"github.com/gonutz/w32"
+	"github.com/nanitefactory/winmb"
+	"github.com/pkg/errors"
 )
 
 // vmArguments may be set by hover at compile-time
@@ -25,7 +26,7 @@ func main() {
 	if err != nil {
 		winmb.MessageBoxPlain("ИСКЛЮЧЕНИЕ: ", err.Error())
 		os.Exit(1)
-	}	
+	}
 }
 
 //hide console windows

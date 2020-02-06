@@ -2,25 +2,31 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:go_historian/file_picker_demo.dart';
+import 'package:go_historian/screen_model.dart';
 import 'package:provider/provider.dart';
 import 'package:go_historian/widgets.dart';
 import 'package:go_historian/main_model.dart';
 
+ScreenModel screenModel = ScreenModel();
+
 class MyApp extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'История',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-        ),
-        home: MyHomePage(),
-        routes: {
-          '/init': (context) => MyApp(),
-          '/test': (context) => FilePickerDemo(),
-        },
-      );
+  Widget build(BuildContext context) {
+    //синглтон с размерами экрана
+    screenModel.width = MediaQuery.of(context).size.width;
+    screenModel.height = MediaQuery.of(context).size.height;
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'История',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: MyHomePage(),
+      routes: {
+        '/init': (context) => MyApp(),
+      },
+    );
+  }
 }
 
 class MyHomePage extends StatefulWidget {

@@ -12,19 +12,22 @@ import (
 	"github.com/nanitefactory/winmb"
 )
 
+var totalPerc float64
 var percent float64
+
+var buffer map[string][]sample
 
 //Забираем данные
 func fetchData(server string, tagnames []string, times []timePeriod, interval string) {
-
 	newTimes := checkTimeSpans(times, interval)
-	percent = 1.0 / float64(len(tagnames)*len(newTimes))
+	percent = 0.5 / float64(len(tagnames)*len(newTimes))
 	//Запускаем рутину сбора
-	go func() {
-		data := getData(server, tagnames, newTimes, interval)
-		export(data)
-		winmb.MessageBoxPlain("Выборка", "Готова!!!")
-	}()
+
+	buffer = getData(server, tagnames, newTimes, interval)
+	export(buffer)
+	totalPerc = 0.0
+	buffer = nil
+	winmb.MessageBoxPlain("Выборка", "Готова!!!")
 }
 
 //Разбиваем временные промежутки на промежутки с maxSamples
@@ -69,16 +72,29 @@ func checkTimeSpans(times []timePeriod, interval string) []timePeriod {
 
 //Функция получения данных
 func getData(server string, tagNames []string, times []timePeriod, interval string) map[string][]sample {
-	var totalPerc float64 = 0.0
 	data := map[string][]sample{}
 	for _, tag := range tagNames {
 		totalSamples := []sample{}
-		for _, t := range times {
+		query := func(t timePeriod) {
 			samples := makeQuery(server, tag, t, interval)
 			totalPerc += percent
 			workPercent <- totalPerc
 			totalSamples = append(totalSamples, samples...)
 		}
+
+		for _, t := range times {
+			select {
+			case stop := <-stopChan:
+				if stop {
+					data[tag] = totalSamples
+					return data
+				}
+				query(t)
+			default:
+				query(t)
+			}
+		}
+
 		data[tag] = totalSamples
 	}
 	return data
@@ -86,6 +102,8 @@ func getData(server string, tagNames []string, times []timePeriod, interval stri
 
 //Запрос в базу для одного тэга
 func makeQuery(server string, tagName string, period timePeriod, interval string) []sample {
+	ole.CoInitialize(0)
+	defer ole.CoUninitialize()
 	query := `select timestamp, value from ihrawdata where tagname like ` +
 		tagName + ` and timestamp => '` +
 		period.start + `' and timestamp < '` +

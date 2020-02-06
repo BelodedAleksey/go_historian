@@ -122,9 +122,7 @@ func saveParams(filename string, server string, tags []string, times []timePerio
 
 //Экспорт в эксель
 func export(data map[string][]sample) {
-	//чтение
 	xlFile := excelize.NewFile()
-
 	defer xlFile.SaveAs("Выборка.xlsx")
 
 	i := 1 //буквенная координата столбца
@@ -135,22 +133,45 @@ func export(data map[string][]sample) {
 		xlFile.SetCellValue(sheet, cellTag, tag)
 
 		var row int
-		for j, sample := range samples {
-			//перехода на новый лист при 100000 строк
-			if (j%maxRows == 0) && (j != 0) {
+		write := func(j int, sample sample) {
+			//переход на новый лист при maxRows строк
+			if row == maxRows {
 				sheet = strconv.Itoa(j / maxRows)
 				xlFile.NewSheet(sheet)
 				row = 0
 				xlFile.SetCellValue(sheet, "A1", "Timestamp")
 				xlFile.SetCellValue(sheet, cellTag, tag)
 			}
-			cellTime := string(alph[0]) + strconv.Itoa(row+2)
+			//Запись процентов
+			if (j%maxSamples == 0) && (j != 0) {
+				totalPerc += percent
+				workPercent <- totalPerc
+			}
+			//Пишем время только для 1 тэга
+			if i == 1 {
+				cellTime := string(alph[0]) + strconv.Itoa(row+2)
+				xlFile.SetCellValue(sheet, cellTime, sample.timestamp)
+			}
+
 			cellValue := string(alph[i]) + strconv.Itoa(row+2)
-			xlFile.SetCellValue(sheet, cellTime, sample.timestamp)
 			xlFile.SetCellValue(sheet, cellValue, sample.value)
 
 			row++
 		}
+
+		for j, sample := range samples {
+			select {
+			case stop := <-stopChan:
+				if stop {
+					return
+				}
+				write(j, sample)
+			default:
+				write(j, sample)
+			}
+		}
+
 		i++
+		sheet = "Sheet1"
 	}
 }
